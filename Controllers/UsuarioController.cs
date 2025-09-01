@@ -43,7 +43,7 @@ namespace MEC.Controllers
         }
 
         // POST api/usuario
-        //[Authorize(Roles = "Administrador")]
+        [Authorize(Roles = "Administrador")]
         [HttpPost]
         public async Task<ActionResult<UsuarioReadDTO>> CreateUsuario(UsuarioCreateDTO dto)
         {            
@@ -72,7 +72,7 @@ namespace MEC.Controllers
 
 
         // PUT api/usuario/5
-        //[Authorize(Roles = "Administrador")]
+        [Authorize(Roles = "Administrador")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUsuario(int id, UsuarioUpdateDTO dto)
         {
@@ -96,7 +96,7 @@ namespace MEC.Controllers
         }
 
         // DELETE api/usuario/5
-        //[Authorize(Roles = "Administrador")]
+        [Authorize(Roles = "Administrador")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUsuario(int id)
         {
