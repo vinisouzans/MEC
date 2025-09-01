@@ -2,6 +2,8 @@ using Mapster;
 using MapsterMapper;
 using MEC.Data;
 using MEC.Profiles;
+using MEC.Services;
+using MEC.Services.Interfaces;
 using MEC.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -50,6 +52,8 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<IEstoqueService, EstoqueService>();
 
 var app = builder.Build();
 
