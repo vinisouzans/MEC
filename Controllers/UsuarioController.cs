@@ -1,11 +1,12 @@
-﻿using AutoMapper;
+﻿using Mapster;
+using MapsterMapper;
+using MEC.Data;
+using MEC.DTOs.Usuario;
 using MEC.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using MEC.Data;
-using MEC.DTOs.Usuario;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace MEC.Controllers
 {
@@ -14,7 +15,7 @@ namespace MEC.Controllers
     public class UsuarioController : ControllerBase
     {
         private readonly AppDbContext _context;
-        private readonly IMapper _mapper;
+        private readonly IMapper _mapper; // Se estiver usando DI com Mapster
 
         public UsuarioController(AppDbContext context, IMapper mapper)
         {
@@ -27,27 +28,35 @@ namespace MEC.Controllers
         public async Task<ActionResult<IEnumerable<UsuarioReadDTO>>> GetUsuarios()
         {
             var usuarios = await _context.Usuarios.ToListAsync();
-            return Ok(_mapper.Map<IEnumerable<UsuarioReadDTO>>(usuarios));
+
+            // Usando Mapster diretamente sem DI
+            return Ok(usuarios.Adapt<IEnumerable<UsuarioReadDTO>>());
+
+            // Ou usando DI (se configurado)
+            // return Ok(_mapper.Map<IEnumerable<UsuarioReadDTO>>(usuarios));
         }
 
         // GET api/usuario/5
         [HttpGet("{id}")]
         public async Task<ActionResult<UsuarioReadDTO>> GetUsuario(int id)
         {
-            var usuario = await _context.Usuarios.ToListAsync();
+            var usuario = await _context.Usuarios.FindAsync(id);
 
             if (usuario == null)
                 return NotFound();
 
-            return Ok(_mapper.Map<UsuarioReadDTO>(usuario));
+            // Usando Mapster diretamente
+            return Ok(usuario.Adapt<UsuarioReadDTO>());
+
+            // Ou usando DI
+            // return Ok(_mapper.Map<UsuarioReadDTO>(usuario));
         }
 
         // POST api/usuario
         [Authorize(Roles = "Administrador")]
         [HttpPost]
         public async Task<ActionResult<UsuarioReadDTO>> CreateUsuario(UsuarioCreateDTO dto)
-        {            
-
+        {
             // Verifica duplicidade de UserName
             var userNameExiste = await _context.Usuarios.AnyAsync(u => u.UserName == dto.UserName);
             if (userNameExiste)
@@ -58,7 +67,12 @@ namespace MEC.Controllers
             if (cpfExiste)
                 return BadRequest($"O CPF '{dto.CPF}' já está cadastrado.");
 
-            var usuario = _mapper.Map<Usuario>(dto);
+            // Usando Mapster diretamente
+            var usuario = dto.Adapt<Usuario>();
+
+            // Ou usando DI
+            // var usuario = _mapper.Map<Usuario>(dto);
+
             usuario.SenhaHash = BCrypt.Net.BCrypt.HashPassword(dto.Senha);
             usuario.DataCriacao = DateTime.UtcNow;
             usuario.Ativo = true;
@@ -66,10 +80,14 @@ namespace MEC.Controllers
             _context.Usuarios.Add(usuario);
             await _context.SaveChangesAsync();
 
-            var usuarioRead = _mapper.Map<UsuarioReadDTO>(usuario);
+            // Usando Mapster diretamente
+            var usuarioRead = usuario.Adapt<UsuarioReadDTO>();
+
+            // Ou usando DI
+            // var usuarioRead = _mapper.Map<UsuarioReadDTO>(usuario);
+
             return CreatedAtAction(nameof(GetUsuario), new { id = usuarioRead.Id }, usuarioRead);
         }
-
 
         // PUT api/usuario/5
         [Authorize(Roles = "Administrador")]
@@ -81,8 +99,11 @@ namespace MEC.Controllers
             if (usuario == null)
                 return NotFound(new { mensagem = "Usuário não encontrado." });
 
-            // Atualiza campos do DTO
-            _mapper.Map(dto, usuario);
+            // Atualiza campos do DTO usando Mapster
+            dto.Adapt(usuario);
+
+            // Ou usando DI
+            // _mapper.Map(dto, usuario);
 
             // Atualiza senha se informada
             if (!string.IsNullOrWhiteSpace(dto.Senha))

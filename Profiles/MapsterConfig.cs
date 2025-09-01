@@ -1,16 +1,17 @@
-﻿using MEC.DTOs.Usuario;
+﻿using Mapster;
+using MEC.DTOs.Usuario;
 using MEC.Models;
-using Mapster;
 
 namespace MEC.Profiles
 {
-    public static class UsuarioProfile
+    public static class MapsterConfig
     {
         public static void Configure()
         {
-            // Configurar todos os mapeamentos na inicialização da aplicação
+            // Configurar mapeamentos personalizados se necessário
             TypeAdapterConfig<Usuario, UsuarioReadDTO>
-                .NewConfig();                
+                .NewConfig();
+            // .Map(dest => dest.PropriedadeCustom, src => src.OutraPropriedade);
 
             TypeAdapterConfig<UsuarioCreateDTO, Usuario>
                 .NewConfig();

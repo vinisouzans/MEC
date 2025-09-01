@@ -1,13 +1,20 @@
+using Mapster;
+using MapsterMapper;
 using MEC.Data;
+using MEC.Profiles;
+using MEC.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
-using MEC.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+// Adicionar Mapster ao container de DI
+MapsterConfig.Configure();
+builder.Services.AddSingleton(TypeAdapterConfig.GlobalSettings);
+builder.Services.AddScoped<IMapper, ServiceMapper>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSingleton(
@@ -43,9 +50,6 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-builder.Services.AddAutoMapper(typeof(Program).Assembly);
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 var app = builder.Build();
 
