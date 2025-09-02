@@ -2,6 +2,7 @@
 using MEC.Models;
 using MEC.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace MEC.Services
 {
@@ -14,9 +15,10 @@ namespace MEC.Services
             _context = context;
         }
 
-        public async Task<bool> RegistrarMovimento(MovimentoEstoque movimento)
+        public async Task<bool> RegistrarMovimento(MovimentoEstoque movimento, IDbContextTransaction? externalTransaction = null)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            var shouldCommit = externalTransaction == null;
+            var transaction = externalTransaction ?? await _context.Database.BeginTransactionAsync();
 
             try
             {
@@ -44,18 +46,21 @@ namespace MEC.Services
 
                 _context.MovimentosEstoque.Add(movimento);
                 await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
+
+                if (shouldCommit)
+                    await transaction.CommitAsync();
 
                 return true;
             }
             catch
             {
-                await transaction.RollbackAsync();
+                if (shouldCommit)
+                    await transaction.RollbackAsync();
                 throw;
             }
         }
 
-        public async Task<bool> EntradaEstoque(int produtoId, int quantidade, string? observacao = null)
+        public async Task<bool> EntradaEstoque(int produtoId, int quantidade, string? observacao = null, IDbContextTransaction? externalTransaction = null)
         {
             var movimento = new MovimentoEstoque
             {
@@ -66,10 +71,10 @@ namespace MEC.Services
                 DataMovimento = DateTime.UtcNow
             };
 
-            return await RegistrarMovimento(movimento);
+            return await RegistrarMovimento(movimento, externalTransaction);
         }
 
-        public async Task<bool> SaidaEstoque(int produtoId, int quantidade, string? observacao = null)
+        public async Task<bool> SaidaEstoque(int produtoId, int quantidade, string? observacao = null, IDbContextTransaction? externalTransaction = null)
         {
             var movimento = new MovimentoEstoque
             {
@@ -80,7 +85,7 @@ namespace MEC.Services
                 DataMovimento = DateTime.UtcNow
             };
 
-            return await RegistrarMovimento(movimento);
+            return await RegistrarMovimento(movimento, externalTransaction);
         }
 
         public async Task<bool> CortarMaterialLinear(int materialId, decimal metrosCortados, string responsavel, string? descricao = null)

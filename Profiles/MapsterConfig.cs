@@ -1,6 +1,8 @@
 ﻿using Mapster;
 using MEC.DTOs.Fornecedor;
+using MEC.DTOs.ItemProjeto;
 using MEC.DTOs.Produto;
+using MEC.DTOs.Projeto;
 using MEC.DTOs.Usuario;
 using MEC.Models;
 
@@ -10,37 +12,26 @@ namespace MEC.Profiles
     {
         public static void Configure()
         {
-            // Configurar mapeamentos personalizados se necessário
-            TypeAdapterConfig<Usuario, UsuarioReadDTO>
-                .NewConfig();
-            // .Map(dest => dest.PropriedadeCustom, src => src.OutraPropriedade);
+            // Configurações existentes...
 
-            TypeAdapterConfig<UsuarioCreateDTO, Usuario>
-                .NewConfig();
+            // NOVAS CONFIGURAÇÕES PARA PROJETO
+            TypeAdapterConfig<Projeto, ProjetoDTO>.NewConfig();
+            TypeAdapterConfig<ProjetoCreateDTO, Projeto>.NewConfig();
 
-            TypeAdapterConfig<UsuarioUpdateDTO, Usuario>
-                .NewConfig();
+            // CONFIGURAÇÕES PARA ITEM PROJETO
+            TypeAdapterConfig<ItemProjeto, ItemProjetoDTO>.NewConfig()
+                .Map(dest => dest.ProdutoNome, src => src.Produto != null ? src.Produto.Nome : "")
+                .Map(dest => dest.ProdutoCodigo, src => src.Produto != null ? src.Produto.Codigo : "")
+                .Map(dest => dest.ProdutoTipo, src => src.Produto != null ? src.Produto.Tipo : 0)
+                .Map(dest => dest.ValorUnitario, src => src.Produto != null ? src.Produto.PrecoVenda : 0)
+                .Map(dest => dest.ValorTotal, src =>
+                    src.Produto != null ?
+                    (src.MetrosLineares.HasValue ?
+                        src.Produto.PrecoVenda * (decimal)src.MetrosLineares.Value :
+                        src.Produto.PrecoVenda * src.Quantidade)
+                    : 0);
 
-            // Configuração para CorteMaterial -> CorteMaterialDTO
-            TypeAdapterConfig<CorteMaterial, CorteMaterialDTO>
-                .NewConfig()
-                .Map(dest => dest.MaterialNome, src => src.MaterialLinear != null ? src.MaterialLinear.Nome : "")
-                .Map(dest => dest.MaterialCodigo, src => src.MaterialLinear != null ? src.MaterialLinear.Codigo : "");
-
-            TypeAdapterConfig<Fornecedor, FornecedorDTO>.NewConfig();
-            TypeAdapterConfig<FornecedorCreateDTO, Fornecedor>.NewConfig();
-            TypeAdapterConfig<FornecedorUpdateDTO, Fornecedor>.NewConfig();
-
-            TypeAdapterConfig<ChapaMDFCreateDTO, ChapaMDF>.NewConfig();
-            TypeAdapterConfig<ChapaMDFUpdateDTO, ChapaMDF>.NewConfig();
-
-            TypeAdapterConfig<MaterialLinearCreateDTO, MaterialLinear>.NewConfig();
-            TypeAdapterConfig<MaterialLinearUpdateDTO, MaterialLinear>.NewConfig();
-
-            TypeAdapterConfig<MaterialUnidadeCreateDTO, MaterialUnidade>.NewConfig();
-            TypeAdapterConfig<MaterialUnidadeUpdateDTO, MaterialUnidade>.NewConfig();
-
-            TypeAdapterConfig<MaterialUnidade, MaterialUnidadeDTO>.NewConfig();
+            TypeAdapterConfig<ItemProjetoCreateDTO, ItemProjeto>.NewConfig();
         }
     }
 }

@@ -17,6 +17,8 @@ namespace MEC.Data
         public DbSet<MaterialUnidade> MateriaisUnidade { get; set; }
         public DbSet<CorteMaterial> CortesMateriais { get; set; }
         public DbSet<MovimentoEstoque> MovimentosEstoque { get; set; }
+        public DbSet<Projeto> Projetos { get; set; }
+        public DbSet<ItemProjeto> ItensProjeto { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -60,6 +62,17 @@ namespace MEC.Data
                 .HasOne(m => m.Produto)
                 .WithMany(p => p.Movimentos)
                 .HasForeignKey(m => m.ProdutoId);
+
+            modelBuilder.Entity<ItemProjeto>()
+                .HasOne(i => i.Projeto)
+                .WithMany(p => p.Itens)
+                .HasForeignKey(i => i.ProjetoId);
+
+            modelBuilder.Entity<ItemProjeto>()
+                .HasOne(i => i.Produto)
+                .WithMany()
+                .HasForeignKey(i => i.ProdutoId);
+
         }
     }
 }
