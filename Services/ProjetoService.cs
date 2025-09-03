@@ -163,7 +163,7 @@ namespace MEC.Services
                 {
                     // Liberar estoque - PASSANDO A TRANSAÇÃO
                     var movimento = new MovimentoEstoque
-                    {
+                    {                        
                         ProdutoId = item.ProdutoId,
                         Tipo = TipoMovimento.Entrada,
                         Quantidade = item.Quantidade,
