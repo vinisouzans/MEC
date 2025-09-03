@@ -7,7 +7,9 @@ using MEC.Services.Interfaces;
 using MEC.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,14 +21,38 @@ builder.Services.AddSingleton(TypeAdapterConfig.GlobalSettings);
 builder.Services.AddScoped<IMapper, ServiceMapper>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSingleton(
-    builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>()
-);
+
+// Configuração JWT
+var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+builder.Services.AddSingleton(jwtSettings);
+
+// Configurar autenticação JWT
+var key = Encoding.ASCII.GetBytes(jwtSettings.Secret);
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateIssuer = false,    // Altere para true se quiser validar Issuer
+        ValidateAudience = false   // Altere para true se quiser validar Audience
+    };
+});
+
+builder.Services.AddAuthorization();
 
 // Swagger + JWT
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "LPS API", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "MEC API", Version = "v1" });
 
     var jwtSecurityScheme = new OpenApiSecurityScheme
     {
@@ -80,7 +106,9 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowAngular");
 
-app.UseAuthorization();
+// IMPORTANTE: Esta ordem é CRÍTICA
+app.UseAuthentication(); // DEVE VIR PRIMEIRO
+app.UseAuthorization();  // DEPOIS
 
 app.MapControllers();
 
